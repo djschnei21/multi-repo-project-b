@@ -1,0 +1,12 @@
+---
+description: Keep the API handlers, openapi.yaml, and the frontend client in sync
+globs: src/**,openapi.yaml
+alwaysApply: false
+---
+
+- `openapi.yaml` is the contract shared with the frontend repo (multi-repo-project-a).
+  Every route in `src/app.js` must be documented there, and every documented route must exist.
+- Any change to a request or response shape needs a matching change to
+  `public/api.js` in multi-repo-project-a. Make both changes in the same task.
+- Errors are JSON objects shaped `{ "error": "<message>" }` with a 4xx status.
+- Every route needs at least one test in `test/app.test.js`.
