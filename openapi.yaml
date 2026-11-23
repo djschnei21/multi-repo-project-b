@@ -52,7 +52,7 @@ paths:
         required: true
         schema: { type: integer }
     patch:
-      summary: Update a todo's title or done flag
+      summary: Update a todo's title, done flag or tags
       requestBody:
         required: true
         content:
@@ -80,17 +80,27 @@ components:
         id: { type: integer, example: 1 }
         title: { type: string, example: Buy milk }
         done: { type: boolean, example: false }
+        tags: { $ref: '#/components/schemas/Tags' }
         createdAt: { type: string, format: date-time }
     NewTodo:
       type: object
       required: [title]
       properties:
         title: { type: string, minLength: 1 }
+        tags: { $ref: '#/components/schemas/Tags' }
     TodoUpdate:
       type: object
       properties:
         title: { type: string, minLength: 1 }
         done: { type: boolean }
+        tags: { $ref: '#/components/schemas/Tags' }
+    Tags:
+      type: array
+      description: >
+        Optional labels. The server trims and lowercases each tag, drops empty
+        ones and removes duplicates. Todos without tags return an empty array.
+      items: { type: string }
+      example: [work, urgent]
     Error:
       type: object
       properties:

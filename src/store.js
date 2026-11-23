@@ -2,11 +2,12 @@ export function createStore(seed = []) {
   const todos = new Map();
   let nextId = 1;
 
-  function add({ title }) {
+  function add({ title, tags = [] }) {
     const todo = {
       id: nextId++,
       title,
       done: false,
+      tags,
       createdAt: new Date().toISOString(),
     };
     todos.set(todo.id, todo);

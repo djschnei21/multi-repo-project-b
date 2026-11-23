@@ -31,6 +31,13 @@ function validateTitle(title) {
   return typeof title === 'string' && title.trim().length > 0;
 }
 
+// Returns the cleaned tag list, or null when `tags` is not an array of strings.
+function normalizeTags(tags) {
+  if (!Array.isArray(tags) || !tags.every((tag) => typeof tag === 'string')) return null;
+  const cleaned = tags.map((tag) => tag.trim().toLowerCase()).filter(Boolean);
+  return [...new Set(cleaned)];
+}
+
 export function createApp({ store = createStore(DEFAULT_SEED) } = {}) {
   return createServer(async (req, res) => {
     const { pathname } = new URL(req.url, 'http://localhost');
@@ -49,7 +56,12 @@ export function createApp({ store = createStore(DEFAULT_SEED) } = {}) {
         if (!body || !validateTitle(body.title)) {
           return send(res, 400, { error: 'title is required' });
         }
-        return send(res, 201, store.add({ title: body.title.trim() }));
+        const todo = { title: body.title.trim() };
+        if ('tags' in body) {
+          todo.tags = normalizeTags(body.tags);
+          if (!todo.tags) return send(res, 400, { error: 'tags must be an array of strings' });
+        }
+        return send(res, 201, store.add(todo));
       }
 
       return send(res, 405, { error: 'method not allowed' });
@@ -75,6 +87,10 @@ export function createApp({ store = createStore(DEFAULT_SEED) } = {}) {
             return send(res, 400, { error: 'done must be a boolean' });
           }
           changes.done = body.done;
+        }
+        if ('tags' in body) {
+          changes.tags = normalizeTags(body.tags);
+          if (!changes.tags) return send(res, 400, { error: 'tags must be an array of strings' });
         }
 
         const todo = store.update(id, changes);
