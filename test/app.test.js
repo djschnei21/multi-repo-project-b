@@ -50,6 +50,43 @@ test('POST /api/todos rejects a missing title', async () => {
   assert.equal(res.status, 400);
 });
 
+test('todos without tags have an empty tags array', async () => {
+  const todos = await (await request('/api/todos')).json();
+  assert.deepEqual(todos[0].tags, []);
+  const created = await (await request('/api/todos', { method: 'POST', body: { title: 'x' } })).json();
+  assert.deepEqual(created.tags, []);
+});
+
+test('POST /api/todos normalizes tags', async () => {
+  const res = await request('/api/todos', {
+    method: 'POST',
+    body: { title: 'Tagged', tags: [' Work ', 'urgent', 'work', ''] },
+  });
+  assert.equal(res.status, 201);
+  assert.deepEqual((await res.json()).tags, ['work', 'urgent']);
+});
+
+test('POST /api/todos rejects tags that are not an array of strings', async () => {
+  for (const tags of ['work', [1], null]) {
+    const res = await request('/api/todos', { method: 'POST', body: { title: 'x', tags } });
+    assert.equal(res.status, 400);
+    assert.deepEqual(await res.json(), { error: 'tags must be an array of strings' });
+  }
+});
+
+test('PATCH /api/todos/:id replaces tags', async () => {
+  const res = await request('/api/todos/1', { method: 'PATCH', body: { tags: ['Home'] } });
+  assert.equal(res.status, 200);
+  const todo = await res.json();
+  assert.deepEqual(todo.tags, ['home']);
+  assert.equal(todo.title, 'seeded');
+});
+
+test('PATCH /api/todos/:id rejects invalid tags', async () => {
+  const res = await request('/api/todos/1', { method: 'PATCH', body: { tags: 'home' } });
+  assert.equal(res.status, 400);
+});
+
 test('PATCH /api/todos/:id marks a todo done', async () => {
   const res = await request('/api/todos/1', { method: 'PATCH', body: { done: true } });
   assert.equal(res.status, 200);
